@@ -1,0 +1,130 @@
+{
+  "name": "scheduled_postgresql_data_backups_failing",
+  "description": "This incident type refers to a situation where scheduled PostgreSQL data backups are not being performed successfully. This could be caused by a variety of reasons such as incorrect configuration, hardware or network issues, or software bugs. As a result, important data may not be backed up as expected, which could lead to data loss in case of a disaster or system failure.",
+  "params": [
+    {
+      "name": "BACKUP_SERVER",
+      "value": ""
+    },
+    {
+      "name": "VERSION",
+      "value": ""
+    },
+    {
+      "name": "BACKUP_LOCATION",
+      "value": ""
+    },
+    {
+      "name": "BACKUP_PORT",
+      "value": ""
+    },
+    {
+      "name": "BACKUP_SCRIPT",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Scheduled PostgreSQL data backups failing.\nThis incident type refers to a situation where scheduled PostgreSQL data backups are not being performed successfully. This could be caused by a variety of reasons such as incorrect configuration, hardware or network issues, or software bugs. As a result, important data may not be backed up as expected, which could lead to data loss in case of a disaster or system failure."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if PostgreSQL service is running"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `systemctl status postgresql`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check PostgreSQL logs for any errors"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `tail -n 50 /var/log/postgresql/postgresql-${VERSION}.log`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the backup schedule configuration"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `cat /etc/cron.d/${BACKUP_SCRIPT}`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check backup script logs for any errors"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `tail -n 50 /var/log/${BACKUP_SCRIPT}.log`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check disk space on the backup location"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `df -h ${BACKUP_LOCATION}`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if backup server is reachable"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `nc -z ${BACKUP_SERVER} ${BACKUP_PORT}`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Clean up the PostgreSQL backups more than a week old to free disk space"
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_clean_old_backups($BACKUP_LOCATION)"
+    }
+  ]
+}
